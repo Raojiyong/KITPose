@@ -72,7 +72,7 @@ class AnimalposeDataset(JointsDataset):
 
         self.num_joints = 20
         self.flip_pairs = [[0, 1], [2, 3], [8, 9], [10, 11], [12, 13], [14, 15],
-                          [16, 17], [18, 19]]
+                           [16, 17], [18, 19]]
         self.parent_ids = None
         self.upper_body_ids = (0, 1, 2, 3, 4, 5, 7, 8, 9, 12, 13, 16, 17)
         self.lower_body_ids = (6, 10, 11, 14, 15, 18, 19)

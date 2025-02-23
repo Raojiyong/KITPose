@@ -13,132 +13,11 @@ from einops import rearrange, repeat
 from timm.models.layers.weight_init import trunc_normal_
 import numpy as np
 import math
-# from .kitpose_base import KITPose_base
 from .fast_keans import batch_fast_kmedoids_with_split
 from .pose_hrnet import PoseHighResolutionNet, Bottleneck, BasicBlock
-from .hr_base import HRNET_base
 
 BN_MOMENTUM = 0.1
 logger = logging.getLogger(__name__)
-
-
-# def index_points(points, idx):
-#     device = points.device
-#     B = points.shape[0]
-#     view_shape = list(idx.shape)
-#     view_shape[1:] = [1] * (len(view_shape) - 1)
-#     repeat_shape = list(idx.shape)
-#     repeat_shape[0] = 1
-#     batch_indices = torch.arange(B, dtype=torch.long).to(device).view(view_shape).repeat(repeat_shape)
-#     new_points = points[batch_indices, idx, :]
-#     return new_points
-#
-#
-# def cluster_dpc_knn(tokens, cluster_num, k=5, token_mask=None):
-#     with torch.no_grad():
-#         x = tokens
-#         B, N, C = x.shape
-#
-#         dist_matrix = torch.cdist(x, x) / (C ** 0.5)
-#
-#         if token_mask is not None:
-#             token_mask = token_mask > 0
-#             dist_matrix = dist_matrix * token_mask[:, None, :] + \
-#                           (dist_matrix.max() + 1) * (~token_mask[:, None, :])
-#
-#         # get local density
-#         dist_nearest, index_nearest = torch.topk(dist_matrix, k=k, dim=-1, largest=False)
-#
-#         density = (-(dist_nearest ** 2).mean(dim=-1)).exp()
-#         # add a little noise to ensure no tokens have the same density
-#         density = density + torch.rand(
-#             density.shape, device=density.device, dtype=density.dtype
-#         ) * 1e-6
-#
-#         if token_mask is not None:
-#             # the density of empty token should be 0
-#             density = density * token_mask
-#
-#         # get distance indicator
-#         mask = density[:, None, :] > density[:, :, None]
-#         mask = mask.type(x.dtype)
-#         dist_max = dist_matrix.flatten(1).max(dim=-1)[0][:, None, None]
-#         dist, index_parent = (dist_matrix * mask + dist_max * (1 - mask)).min(dim=-1)
-#
-#         # select clustering center according to score
-#         score = dist * density
-#         _, index_down = torch.topk(score, k=cluster_num, dim=-1)
-#
-#         dist_matrix = index_points(dist_matrix, index_down)
-#
-#         idx_cluster = dist_matrix.argmin(dim=1)
-#
-#         idx_batch = torch.arange(B, device=x.device)[:, None].expand(B, cluster_num)
-#         idx_tmp = torch.arange(cluster_num, device=x.device)[None, :].expand(B, cluster_num)
-#         idx_cluster[idx_batch.reshape(-1), index_down.reshape(-1)] = idx_tmp.reshape(-1)
-#
-#     return idx_cluster, cluster_num
-#
-#
-# def merge_tokens(tokens, idx_cluster, cluster_num, token_weight=None):
-#     B, N, C = tokens.shape
-#     if token_weight is None:
-#         token_weight = tokens.new_ones(B, N, 1)
-#
-#     idx_batch = torch.arange(B, device=tokens.device)[:, None]
-#     idx = idx_cluster + idx_batch * cluster_num
-#
-#     all_weight = token_weight.new_zeros(B * cluster_num, 1)
-#     all_weight.index_add_(dim=0, index=idx.reshape(B * N),
-#                           source=token_weight.reshape(B * N, 1))
-#     all_weight = all_weight + 1e-6
-#     norm_weight = token_weight / all_weight[idx]
-#
-#     # average token features
-#     x_merged = tokens.new_zeros(B * cluster_num, C)
-#     source = tokens * norm_weight
-#     x_merged.index_add_(dim=0, index=idx.reshape(B * N),
-#                         source=source.reshape(B * N, C).type(tokens.dtype))
-#     x_merged = x_merged.reshape(B, cluster_num, C)
-#     return x_merged
-
-
-# class DWConv(nn.Module):
-#     def __init__(self, dim=17):
-#         super(DWConv, self).__init__()
-#         self.dwconv = nn.Conv2d(dim, dim, 3, 1, 1, bias=True, groups=dim)
-#
-#     def forward(self, x):
-#         B, N, C = x.shape
-#         HW = int(math.sqrt(C))
-#         # x = rearrange(x,, 'b n (h w) -> b n h w', h = HW, w = HW)
-#         x = x.view(B, N, HW, HW)
-#         x = self.dwconv(x)
-#         x = x.flatten(2)
-#         return x
-
-
-# class FeedForward(nn.Module):
-#     def __init__(self, dim, hidden_dim, in_channels=17, act_layer=nn.GELU, dropout=0.):
-#         super().__init__()
-#         self.fc1 = nn.Sequential(nn.Linear(dim, hidden_dim),
-#                                  act_layer())
-#         self.drop = nn.Dropout(dropout)
-#         self.act = act_layer()
-#         self.dwconv = nn.Sequential(DWConv(in_channels),
-#                                     act_layer())
-#         self.fc2 = nn.Linear(hidden_dim, dim)
-#
-#     def forward(self, x):
-#         B, N, C = x.shape
-#         x = self.fc1(x)
-#         # x = self.act(x + self.dwconv(x))
-#         x = self.dwconv(x)
-#         x = self.drop(x)
-#         x = self.fc2(x)
-#         x = self.drop(x)
-#         return x
-
 
 class FeedForward(nn.Module):
     def __init__(self, dim, hidden_dim, dropout=0.):
@@ -154,59 +33,6 @@ class FeedForward(nn.Module):
     def forward(self, x):
         return self.net(x)
 
-
-# class InnerAttention(nn.Module):
-#     def __init__(self, embed_dim, num_heads, dropout=0., kdim=None, vdim=None):
-#         super().__init__()
-#         self.embed_dim = embed_dim
-#         self.kdim = kdim if kdim is not None else embed_dim
-#         self.vdim = vdim if vdim is not None else embed_dim
-#
-#         self.num_heads = num_heads
-#         self.dropout = nn.Dropout(dropout)
-#         self.query_proj = nn.Linear(self.kdim, self.kdim, bias=True)
-#         self.key_proj = nn.Linear(self.kdim, self.kdim, bias=True)
-#         self.out_proj = nn.Linear(self.vdim, self.vdim, bias=True)
-#         self.scale = embed_dim ** -0.5
-#
-#     def forward(self, query, key, value):
-#         q, k = self.query_proj(query), self.key_proj(key)
-#         v = value
-#         dots = torch.einsum('bid,bjd->bij', q, k) * self.scale
-#         attn = dots.softmax(dim=-1)
-#         attn = self.dropout(attn)
-#         out = torch.einsum('bij,bjd->bid', attn, v)
-#         residual = out
-#         out = self.out_proj(out)
-#         out = residual + out
-#         return out, attn
-#
-#
-# class CorrAttention(nn.Module):
-#     def __init__(self, num_heads, dropout, match_dim, feat_size):
-#         super().__init__()
-#         self.match_dim = match_dim
-#         self.feat_size = feat_size
-#         self.corr_proj = nn.Linear(self.feat_size, self.match_dim)
-#         self.inner_attn = InnerAttention(self.match_dim, num_heads, dropout=dropout, vdim=self.feat_size)
-#         self.feat_norm1 = nn.LayerNorm(self.match_dim)
-#         self.feat_norm2 = nn.LayerNorm(self.feat_size)
-#         self.dropout = nn.Dropout(dropout)
-#         self.num_heads = num_heads
-#
-#     def forward(self, corr_map, pos_emb):
-#         batch_size = pos_emb.shape[0]
-#         pos_emb = torch.repeat_interleave(pos_emb, self.num_heads, dim=1).reshape(-1, self.feat_size, self.match_dim)
-#         # from the perspective of keys
-#         corr_map = corr_map.transpose(-2, -1).reshape(-1, self.feat_size, self.feat_size)
-#         q = k = (self.feat_norm1(self.corr_proj(corr_map)) + pos_emb)
-#         corr_map1 = self.inner_attn(q, k, value=self.feat_norm2(corr_map))[0]
-#         corr_map = self.dropout(corr_map1)
-#         corr_map = corr_map.transpose(-2, -1)
-#         corr_map = corr_map.reshape(self.num_heads * batch_size, self.feat_size, -1)
-#         return corr_map
-
-
 class Attention(nn.Module):
     def __init__(self, dim, inner_dim, heads=8, dropout=0., num_keypoints=None, scale_with_head=False, aia_mode=False):
         super().__init__()
@@ -220,10 +46,9 @@ class Attention(nn.Module):
         )
         self.num_keypoints = num_keypoints
         self.aia_mode = aia_mode
-        # self.corr_attn = CorrAttention(num_heads=heads, dropout=dropout, match_dim=inner_dim, feat_size=num_keypoints)
 
     # @get_local('attn')
-    def forward(self, x, mask=None, pos_embed=None, inner_pos_embed=None):
+    def forward(self, x, mask=None, pos_embed=None):
         b, n, _, h = *x.shape, self.heads
         qkv = self.to_qkv(x).chunk(3, dim=-1)
         q, k, v = map(lambda t: rearrange(t, 'b n (h d) -> b h n d', h=h), qkv)
@@ -238,18 +63,13 @@ class Attention(nn.Module):
             dots.masked_fill_(~mask, mask_value)
             del mask
 
-        # if self.aia_mode:
-        #     corr_map = dots
-        #     corr_map = self.corr_attn(corr_map, inner_pos_embed).reshape(b, h, n, -1)
-        #     dots = corr_map + dots
-
         attn = dots.softmax(dim=-1)
 
         out = torch.einsum('bhij,bhjd->bhid', attn, v)
 
         out = rearrange(out, 'b h n d -> b n (h d)')
         out = self.to_out(out)
-        return out, attn
+        return out
 
 
 class PoseEncoderLayer(nn.Module):
@@ -259,20 +79,19 @@ class PoseEncoderLayer(nn.Module):
         self.attn = Attention(dim, inner_dim, heads=heads, dropout=dropout, num_keypoints=in_channels,
                               scale_with_head=scale_with_head, aia_mode=aia_mode)
         self.ffn = FeedForward(dim, mlp_dim, dropout=dropout)
-        # self.ffn = FeedForward(dim, mlp_dim, in_channels=in_channels, dropout=dropout)
         self.norm1 = nn.LayerNorm(dim)
         self.norm2 = nn.LayerNorm(dim)
 
     def forward(self, x, mask=None, pos=None, inner_pos=None):
         residual = x
         x = self.norm1(x)
-        x, attn = self.attn(x, mask, pos, inner_pos)
+        x = self.attn(x, mask, pos, inner_pos)
         x += residual
         residual = x
         x = self.norm2(x)
         x = self.ffn(x)
         out = x + residual
-        return out, attn
+        return out
 
 
 class Transformer(nn.Module):
@@ -294,16 +113,6 @@ class Transformer(nn.Module):
             if idx > 0 and self.all_attn:
                 x[:, self.num_bp:] += pos
             x, attn_weights = layer(x, mask=mask, pos=pos, inner_pos=inner_pos)
-            att = attn_weights
-        # dense connect
-        # features = [x]
-        # for idx, layer in enumerate(self.layers):
-        #     feature = torch.stack(features).sum(dim=0)
-        #     if idx > 0 and self.all_attn:
-        #         feature[:, self.num_bp:] += pos
-        #     new_feature, attn_weights = layer(feature, mask=mask, pos=pos, inner_pos=inner_pos)
-        #     features.append(new_feature)
-        # out = torch.stack(features).sum(dim=0)
         return x
 
 
@@ -402,23 +211,14 @@ class KITPose_base(nn.Module):
                 self.pe_w = w
                 length = self.pe_h * self.pe_w
             if pe_type == 'learnable':
-                # self.pos_embedding = nn.Parameter(torch.zeros(1, self.num_patches + self.num_keypoints, d_model))
                 self.pos_embedding = nn.Parameter(torch.zeros(1, self.num_keypoints + self.num_bp, d_model))
                 trunc_normal_(self.pos_embedding, std=.02)
                 print("==> Add Learnable PositionEmbedding~")
             else:
-                # self.pos_embedding = nn.Parameter(
-                #     self._make_sine_position_embedding_2d(d_model),
-                #     requires_grad=False)
                 self.pos_embedding = nn.Parameter(
                     self._make_sine_position_embedding_1d(self.num_keypoints, d_model),
                     requires_grad=False)
-                # if self.aia_mode:
-                #     self.inner_pos_embedding = nn.Parameter(
-                #         self._make_sine_position_embedding_1d(self.num_keypoints + self.num_bp, d_inner),
-                #         requires_grad=False)
-                # else:
-                #     self.inner_pos_embedding = None
+
                 print("==> Add Sine PositionEmbedding~")
 
     def _make_sine_position_embedding_2d(self, d_model, temperature=10000,
@@ -457,7 +257,6 @@ class KITPose_base(nn.Module):
 
         pos = embed[:, :, None] / dim_t
         pos = torch.stack((pos[:, :, 0::2].sin(), pos[:, :, 1::2].cos()), dim=3).flatten(2)  # 1, num_joints, embed_dim
-        # pos = pos.permute(0, 2, 1)
         return pos
 
     def _init_weights(self, m):
@@ -481,9 +280,7 @@ class KITPose_base(nn.Module):
         b, n, _ = x.shape
 
         cluster_num = self.num_bp
-        # batch_index = torch.arange(kpt_feature.shape[0], dtype=torch.long, device=kpt_feature.device).unsqueeze(-1)
-        # idx_cluster, cluster_num = cluster_dpc_knn(all_feature, cluster_num, 2)
-        # bp_embeddings = merge_tokens(all_feature, idx_cluster, cluster_num)
+
         assign, mediods_ids = batch_fast_kmedoids_with_split(kpt_feature, cluster_num,
                                                              distance='cosine', threshold=1e-6,
                                                              iter_limit=40,
@@ -491,13 +288,7 @@ class KITPose_base(nn.Module):
                                                              norm_p=2.0,
                                                              split_size=8,
                                                              pre_norm=True)
-        # assign, mediods_ids = batch_fast_kmedoids_with_split(kpt_feature, cluster_num,
-        #                                                      distance='cosine', threshold=1e-6,
-        #                                                      iter_limit=40,
-        #                                                      id_sort=True,
-        #                                                      norm_p=2.0,
-        #                                                      split_size=8,
-        #                                                      pre_norm=True)
+
         bp_emb_list = []
         for i in range(cluster_num):
             # [B, cluster, 1]

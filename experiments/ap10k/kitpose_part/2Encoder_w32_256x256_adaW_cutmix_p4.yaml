@@ -4,7 +4,7 @@ CUDNN:
   DETERMINISTIC: false
   ENABLED: true
 DATA_DIR: ''
-GPUS: (0, 1)
+GPUS: (0,)
 OUTPUT_DIR: 'output'
 LOG_DIR: 'log'
 WORKERS: 8
@@ -126,7 +126,7 @@ TEST:
   BBOX_THRE: 1.0
   IMAGE_THRE: 0.0
   IN_VIS_THRE: 0.2
-  MODEL_FILE: 'output/ap10k/kitpose_part/2Encoder_w32_256x256_adaW_cutmix_p4/model_best.pth'
+  MODEL_FILE: 'output/ap10k/kitpose_part/2Encoder_w32_256x256_adaW_cutmix_p4_map766_best/model_best.pth'
   NMS_THRE: 1.0
   OKS_THRE: 0.9
   USE_GT_BBOX: true

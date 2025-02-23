@@ -2,7 +2,7 @@
 # Copyright (c) Microsoft
 # Licensed under the MIT License.
 # Written by Bin Xiao (Bin.Xiao@microsoft.com)
-# Modified by Hanbin Dai (daihanbin.ac@gmail.com) and Feng Zhang (zhangfengwcy@gmail.com)
+# Modified by Jiyong Rao(raojiyong@stu.jiangnan.edu.cn)
 # ------------------------------------------------------------------------------
 
 from __future__ import absolute_import
@@ -57,9 +57,6 @@ def cutmix_data_no_target_weight_update(input, target, target_weight, alpha=1.0,
 
     target_mix = target_A
     target_mix[:, :, bbx1_t:bbx2_t, bby1_t:bby2_t] = target_B[:, :, bbx1_t:bbx2_t, bby1_t:bby2_t]
-
-    # target_weight_mix_A = target_weight_A.view(-1, target.size(1), 1)
-    # target_weight_mix_B = target_weight_B.view(-1, target.size(1), 1)
 
     # ----------------------------------
     # update to mask keypoints inside bbx
@@ -121,7 +118,7 @@ def cutmix_criterion(criterion, pred, target, tweighta, tweightb, lam):
 
 
 def train_cutmix(config, train_loader, model, criterion_kpts, criterion_parts, optimizer, epoch,
-                 output_dir, wandb=None):
+                 output_dir):
     batch_time = AverageMeter()
     data_time = AverageMeter()
     losses = AverageMeter()
@@ -175,7 +172,6 @@ def train_cutmix(config, train_loader, model, criterion_kpts, criterion_parts, o
         # overall loss
         loss = kpt_loss + part_loss
         # compute gradient and do update step
-        # loss = kpt_loss
         optimizer.zero_grad()
         loss.backward()
 
@@ -264,17 +260,10 @@ def validate(config, val_loader, val_dataset, model, criterion, output_dir, wand
                                            val_dataset.flip_pairs)
                 output_flipped = torch.from_numpy(output_flipped.copy()).cuda()
 
-                # feature is not aligned, shift flipped heatmap for higher accuracy
-                # if config.TEST.SHIFT_HEATMAP:
-                #     output_flipped[:, :, :, 1:] = \
-                #         output_flipped.clone()[:, :, :, 0:-1]
-
                 output = (output + output_flipped) * 0.5
 
             target = target.cuda(non_blocking=True)
             target_weight = target_weight.cuda(non_blocking=True)
-            # if config.LOSS.USE_DIFFERENT_JOINTS_WEIGHT:
-            #     target_weight = torch.mul(target_weight[:], joints_weight)
 
             loss = criterion(output, target, target_weight)
 
@@ -376,123 +365,6 @@ def validate(config, val_loader, val_dataset, model, criterion, output_dir, wand
     return perf_indicator, wandb_val_log
 
 
-# def ensemble_validate(config, val_loader, val_dataset, model, criterion, output_dir, wandb=None, log_type='map'):
-#     batch_time = AverageMeter()
-#     losses = AverageMeter()
-#     acc = AverageMeter()
-#
-#     # switch to evaluate mode
-#     model.eval()
-#
-#     num_samples = len(val_dataset)
-#     all_preds = np.zeros(
-#         (num_samples, config.MODEL.NUM_JOINTS, 3),
-#         dtype=np.float32
-#     )
-#     all_boxes = np.zeros((num_samples, 6))
-#     image_path = []
-#     filenames = []
-#     imgnums = []
-#     bbox_ids = []
-#     idx = 0
-#     with torch.no_grad():
-#         end = time.time()
-#         for i, (input, target, target_weight, meta) in enumerate(val_loader):
-#             # compute output
-#             _, bps, outputs = model(input)
-#
-#             if isinstance(outputs, list):
-#                 output = outputs[-1]
-#             else:
-#                 output = outputs
-#
-#             if config.TEST.FLIP_TEST:
-#                 # this part is ugly, because pytorch has not supported negative index
-#                 # input_flipped = model(input[:, :, :, ::-1])
-#                 input_flipped = np.flip(input.cpu().numpy(), 3).copy()
-#                 input_flipped = torch.from_numpy(input_flipped).cuda()
-#                 _, _, outputs_flipped = model(input_flipped)
-#
-#                 if isinstance(outputs_flipped, list):
-#                     output_flipped = outputs_flipped[-1]
-#                 else:
-#                     output_flipped = outputs_flipped
-#
-#                 output_flipped = flip_back(output_flipped.cpu().numpy(),
-#                                            val_dataset.flip_pairs)
-#                 output_flipped = torch.from_numpy(output_flipped.copy()).cuda()
-#
-#                 # feature is not aligned, shift flipped heatmap for higher accuracy
-#                 # if config.TEST.SHIFT_HEATMAP:
-#                 #     output_flipped[:, :, :, 1:] = \
-#                 #         output_flipped.clone()[:, :, :, 0:-1]
-#
-#                 output = (output + output_flipped) * 0.5
-#
-#             target = target.cuda(non_blocking=True)
-#             target_weight = target_weight.cuda(non_blocking=True)
-#             # if config.LOSS.USE_DIFFERENT_JOINTS_WEIGHT:
-#             #     target_weight = torch.mul(target_weight[:], joints_weight)
-#
-#             loss = criterion(output, target, target_weight)
-#
-#             num_images = input.size(0)
-#             # measure accuracy and record loss
-#             losses.update(loss.item(), num_images)
-#             _, avg_acc, cnt, pred = accuracy(output.cpu().numpy(),
-#                                              target.cpu().numpy())
-#
-#             acc.update(avg_acc, cnt)
-#
-#             # measure elapsed time
-#             batch_time.update(time.time() - end)
-#             end = time.time()
-#
-#             c = meta['center'].numpy()
-#             s = meta['scale'].numpy()
-#             score = meta['bbox_score'].numpy()
-#
-#             if bbox_ids is not None:
-#                 bbox_ids.append(meta['bbox_id'])
-#
-#             preds, maxvals = get_final_preds(
-#                 config, output.clone().cpu().numpy(), c, s)
-#
-#             all_preds[idx:idx + num_images, :, 0:2] = preds[:, :, 0:2]
-#             all_preds[idx:idx + num_images, :, 2:3] = maxvals
-#             # double check this all_boxes parts
-#             all_boxes[idx:idx + num_images, 0:2] = c[:, 0:2]
-#             all_boxes[idx:idx + num_images, 2:4] = s[:, 0:2]
-#             all_boxes[idx:idx + num_images, 4] = np.prod(s * 200, 1)
-#             all_boxes[idx:idx + num_images, 5] = score
-#             image_path.extend(meta['image'])
-#
-#             idx += num_images
-#
-#             if i % config.PRINT_FREQ == 0:
-#                 msg = 'Test: [{0}/{1}]\t' \
-#                       'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t' \
-#                       'Loss {loss.val:.4f} ({loss.avg:.4f})\t' \
-#                       'Accuracy {acc.val:.3f} ({acc.avg:.3f})'.format(
-#                     i, len(val_loader), batch_time=batch_time,
-#                     loss=losses, acc=acc)
-#                 logger.info(msg)
-#
-#                 prefix = '{}_{}'.format(
-#                     os.path.join(output_dir, 'val'), i
-#                 )
-#                 save_debug_images(config, input, meta, target, pred * 4, output,
-#                                   prefix)
-#
-#         bbox_ids = torch.cat(bbox_ids)
-#         name_values, perf_indicator = val_dataset.evaluate(
-#             config, all_preds, output_dir, all_boxes, bbox_ids, image_path,
-#             filenames, imgnums
-#         )
-#     return all_preds
-#
-
-# markdown format output
 def _print_name_value(name_value, full_arch_name):
     names = name_value.keys()
     values = name_value.values()

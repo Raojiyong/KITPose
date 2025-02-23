@@ -210,6 +210,7 @@ def main():
         logger.info("=> the first lr is {:.6f}, the second lr is {:.6f}".format(
             lr_scheduler.get_last_lr()[0],
             lr_scheduler.get_last_lr()[1]))
+        # logger.info("=> the lr is {:.6f}".format(lr_scheduler.get_last_lr()[0]))
 
         # train for one epoch
         wandb_train_log = train_cutmix(cfg, train_loader, model, criterion_kpt, criterion_part, optimizer, epoch,

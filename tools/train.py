@@ -28,7 +28,7 @@ from tensorboardX import SummaryWriter
 import _init_paths
 from config import cfg
 from config import update_config
-from core.loss import JointsMSELoss, AdaptiveLoss
+from core.loss import JointsMSELoss
 from core.function import train
 from core.function import validate
 from utils.utils import get_optimizer

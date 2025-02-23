@@ -27,7 +27,7 @@ MODEL:
   INIT_WEIGHTS: true
   NAME: kitpose_part
   NUM_JOINTS: 23
-  NUM_BP: 6
+  NUM_BP: 7
   PRETRAINED: 'models/pytorch/imagenet/hrnet_w32-36af842e.pth'
   TARGET_TYPE: gaussian
   BASE_CHANNEL: 23

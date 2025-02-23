@@ -557,13 +557,13 @@ class PoseHighResolutionNet2(nn.Module):
         #         padding=1 if extra['FINAL_CONV_KERNEL'] == 3 else 0
         #     ))
         # self.final_layer = nn.ModuleList(final_layer)
-        # self.final_layer = nn.Conv2d(
-        #     in_channels=pre_stage_channels[0],
-        #     out_channels=cfg['MODEL']['NUM_JOINTS'][0],
-        #     kernel_size=extra['FINAL_CONV_KERNEL'],
-        #     stride=1,
-        #     padding=1 if extra['FINAL_CONV_KERNEL'] == 3 else 0
-        # )
+        self.final_layer = nn.Conv2d(
+            in_channels=pre_stage_channels[0],
+            out_channels=cfg['MODEL']['NUM_JOINTS'],
+            kernel_size=extra['FINAL_CONV_KERNEL'],
+            stride=1,
+            padding=1 if extra['FINAL_CONV_KERNEL'] == 3 else 0
+        )
 
         self.pretrained_layers = extra['PRETRAINED_LAYERS']
 
@@ -695,8 +695,8 @@ class PoseHighResolutionNet2(nn.Module):
         # output = []
         # for i in range(self.num_experts):
         #     output.append(self.final_layer[i](y_list[0]))
-        # x = self.final_layer(y_list[0])
-        return y_list[0]
+        x = self.final_layer(y_list[0])
+        return x
 
     def init_weights(self, pretrained=''):
         logger.info('=> init weights from normal distribution')

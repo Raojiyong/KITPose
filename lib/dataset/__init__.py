@@ -14,9 +14,3 @@ from .ap10k import AP10KDataset as ap10k
 from .atrw import ATRWDataset as atrw
 from .animalpose import AnimalposeDataset as animalpose
 from .ak import AnimalKingdomDataset as ak
-
-# moe
-from .cocomoe import COCODatasetMOE as cocomoe
-from .ap10kmoe import AP10KDatasetMOE as ap10kmoe
-from .animalposemoe import AnimalposeDatasetMOE as animalposemoe
-from .akmoe import AnimalKingdomDatasetMOE as akmoe

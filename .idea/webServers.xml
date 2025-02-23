@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="WebServers">
+    <option name="servers">
+      <webServer id="988a8aa6-ee41-4cbc-b90f-2dcbd0997301" name="Nyx_kitpose">
+        <fileTransfer rootFolder="/data_A/jiyong" accessType="SFTP" host="172.18.235.44" port="9900" sshConfigId="d90efc8b-62b8-4497-ba7b-61b3cab69b2e" sshConfig="Nyx">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+        </fileTransfer>
+      </webServer>
+      <webServer id="e75ab372-ff15-40d1-9afe-23becb0e0b23" name="Gaia_data">
+        <fileTransfer rootFolder="/vol1/jiyong" accessType="SFTP" host="172.18.235.56" port="9200" sshConfigId="0ff0ab32-1f18-4581-b85e-e41271bd5025" sshConfig="Gaia">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+        </fileTransfer>
+      </webServer>
+    </option>
+  </component>
+</project>
