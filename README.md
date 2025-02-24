@@ -17,38 +17,63 @@ In this work, to achieve general mammal pose estimation, we developed a novel ke
 Simultaneously, to preserve the semantic information in the image, a new concept, referred to as body part prompts, is introduced to provide discriminative context, organising the information interactions. Furthermore, to automatically balance the importance between each keypoints, a novel adaptive weight strategy is introduced to common MSE loss. The designed architecture reflects its superiority and generalisation for general mammal pose estimation, which has been evaluated through extensive  experiments on the AP10K, AnimalKingdom, and COCO datasets.
 
 ![Illustrating the architecture of the proposed KITPose](/figures/kitpose.png)
-## Main Results
-### Results on AP10k val
-## Environment
-The code is developed using python 3.6 on Ubuntu 16.04. NVIDIA GPUs are needed. The code is developed and tested using 4 NVIDIA P100 GPU cards. Other platforms or GPU cards are not fully tested.
+## <a name="results"></a>🔎 Main Results
 
-## Quick start
-### Installation
-1. Install pytorch >= v1.0.0 following [official instruction](https://pytorch.org/).
-   **Note that if you use pytorch's version < v1.0.0, you should following the instruction at <https://github.com/Microsoft/human-pose-estimation.pytorch> to disable cudnn's implementations of BatchNorm layer. We encourage you to use higher pytorch's version(>=v1.0.0)**
-2. Clone this repo, and we'll call the directory that you cloned as ${POSE_ROOT}.
-3. Install dependencies:
-   ```
-   pip install -r requirements.txt
-   ```
-4. Make libs:
-   ```
-   cd ${POSE_ROOT}/lib
-   make
-   ```
-5. Install [COCOAPI](https://github.com/cocodataset/cocoapi):
-   ```
-   # COCOAPI=/path/to/clone/cocoapi
-   git clone https://github.com/cocodataset/cocoapi.git $COCOAPI
-   cd $COCOAPI/PythonAPI
-   # Install into global site-packages
-   make install
-   # Alternatively, if you do not h[README.md](..%2FREADME.md)ave permissions or prefer
-   # not to install the COCO API into global site-packages
-   python3 setup.py install --user
-   ```
-   Note that instructions like # COCOAPI=/path/to/install/cocoapi indicate that you should pick a path where you'd like to have the software cloned and then set an environment variable (COCOAPI in this case) accordingly.
-4. Init output(training model output directory) and log(tensorboard log directory) directory:
+We achieve state-of-the-art performance. Detailed results can be found in the paper.
+<details>
+<summary>Quantitative Comparison on AP10k val (click to expand)</summary>
+- results in Table 2 of the main paper.
+
+<p align="center">
+  <img width="900" src="figures/res_ap10k.png">
+</p>
+</details>
+
+<details>
+<summary>Quantitative Comparison on AnimalPose val & AnimalKingdom test (click to expand)</summary>
+- results in Table 3 (Left) & Table 4 (Right) of the main paper.
+
+<p align="center" style="display: flex; justify-content: center; gap: 50px;">
+  <img src="figures/res_animalpose.png" width="440">
+  <img src="figures/res_ak.png" width="400">
+</p>
+</details>
+
+<details>
+<summary>Quantitative Comparison on COCO test2017 (click to expand)</summary>
+- results in Table 10 of the main paper.
+
+<p align="center">
+  <img width="900" src="figures/res_coco_test.png">
+</p>
+</details>
+
+## ⚙️ Dependencies
+- Python 3.6
+- PyTorch 1.9.0
+- NVIDIA GPU + [CUDA](https://developer.nvidia.com/cuda-downloads)
+
+```bash
+git clone https://github.com/Raojiyong/KITPose
+conda create -n KITPose python=3.6
+conda activate KITPose
+# Install dependencies:
+pip install -r requirements.txt -f https://download.pytorch.org/whl/torch_stable.html
+# Make libs:
+cd ${POSE_ROOT}/lib
+make
+# Install COCOAPI
+cd ${POSE_ROOT}/cocoapi/PythonAPI
+# Install into global site-packages:
+make install
+# Alternatively, if you do not have write access to global site-packages:
+python3 setup.py install --user
+```
+It should be noted that we have made modifications to the [COCOAPI](https://github.com/cocodataset/cocoapi) here, primarily to adjust the _**sigmas**_ values for different datasets.
+
+## 📦 Quick start
+
+1. Init output(training model output directory) and log(tensorboard log directory) directory:
 
    ```
    mkdir output 
@@ -70,7 +95,7 @@ The code is developed using python 3.6 on Ubuntu 16.04. NVIDIA GPUs are needed. 
    └── requirements.txt
    ```
 
-6. Download pretrained models from our model zoo ([OneDrive](https://1drv.ms/f/c/516ca5af9c3a92b7/EqSxjqfURJRLnohjuJNnpuIBi8LAVUyJQ-cw7d39AbE4Mw?e=aqgYHV))
+2. Download pretrained models from our model zoo ([OneDrive](https://1drv.ms/f/c/516ca5af9c3a92b7/EqSxjqfURJRLnohjuJNnpuIBi8LAVUyJQ-cw7d39AbE4Mw?e=aqgYHV))
    ```
    ${POSE_ROOT}
     `-- models
@@ -92,12 +117,90 @@ The code is developed using python 3.6 on Ubuntu 16.04. NVIDIA GPUs are needed. 
          |   |-- KITPose_E2C4_w48_384x384.pth
 
    ```
-   
-### Data preparation
+## 🖨️ Data preparation 
 
-### Training and Testing
+For AP-10K data, please download the data from [AP10K](https://github.com/AlexTheBad/AP-10K) and put it in the data directory.
+```
+${POSE_ROOT}
+|── data
+    │── ap10k
+        │-- annotations
+        │   │-- ap10k-train-split1.json
+        │   |-- ap10k-train-split2.json
+        │   |-- ap10k-train-split3.json
+        │   │-- ap10k-val-split1.json
+        │   |-- ap10k-val-split2.json
+        │   |-- ap10k-val-split3.json
+        │   |-- ap10k-test-split1.json
+        │   |-- ap10k-test-split2.json
+        │   |-- ap10k-test-split3.json
+        │-- data
+        │   │-- 000000000001.jpg
+        │   │-- 000000000002.jpg
+        │   │-- ...
 
-### Citation
+```
+For AnimalKingdom data, please download the data from [AnimalKingdom](https://github.com/leoxiaobin/deep-high-resolution-net.pytorch) and put it in the data directory.
+```
+${POSE_ROOT}
+|-- data
+`-- |-- ak_P3_mammal
+    `-- |-- annot
+        |   |-- test.json
+        |   |-- train.json
+        `-- images
+            |-- AAACXZTV
+            |-- AAAUILHH
+```
+**For COCO data**, please download from [COCO download](http://cocodataset.org/#download), 2017 Train/Val is needed for COCO keypoints training and validation. We also provide person detection result of COCO val2017 and test-dev2017 to reproduce our multi-person pose estimation results. Please download from [OneDrive](https://1drv.ms/f/s!AhIXJn_J-blWzzDXoz5BeFl8sWM-) or [GoogleDrive](https://drive.google.com/drive/folders/1fRUDNUDxe9fjqcRZ2bnF_TKMlO0nB_dk?usp=sharing).
+Download and extract them under {POSE_ROOT}/data, and make them look like this:
+```
+${POSE_ROOT}
+|-- data
+`-- |-- coco
+    `-- |-- annotations
+        |   |-- person_keypoints_train2017.json
+        |   `-- person_keypoints_val2017.json
+        |-- person_detection_results
+        |   |-- COCO_val2017_detections_AP_H_56_person.json
+        |   |-- COCO_test-dev2017_detections_AP_H_609_person.json
+        `-- images
+            |-- train2017
+            |   |-- 000000000009.jpg
+            |   |-- 000000000025.jpg
+            |   |-- 000000000030.jpg
+            |   |-- ... 
+            `-- val2017
+                |-- 000000000139.jpg
+                |-- 000000000285.jpg
+                |-- 000000000632.jpg
+                |-- ... 
+```
+
+
+## 🔨 Training and Testing
+### Training
+- Run the following scripts. The training configuration is in `experiments/`.
+```shell
+# ap-10k training script
+CUDA_VISIBLE_DEVICES=0,1,2,3 python tools/adaW_train_cutmix_part.py --cfg experiments/ap10k/kitpose_part/2Encoder_w32_256x256_adaW_cutmix_p4.yaml
+# coco training script
+CUDA_VISIBLE_DEVICES=0,1,2,3 python tools/adaW_train_cutmix_part.py --cfg experiments/coco/kitpose_part/2Encoder_w32_256x256_adaW_cutmix_p4.yaml
+```
+
+### Testing
+- Run the following scripts. The testing configuration is also in `experiments/`.
+```shell
+# ap-10k testing script
+CUDA_VISIBLE_DEVICES=0 python tools/adaW_test_cutmix_part.py \
+  --cfg experiments/ap10k/kitpose_part/2Encoder_w32_256x256_adaW_cutmix_p4.yaml
+# coco val2017 testing script
+CUDA_VISIBLE_DEVICES=0 python tools/adaW_test_cutmix_part.py \
+  --cfg experiments/coco/kitpose_part/2Encoder_w32_256x256_adaW_cutmix_p4.yaml \
+  TEST.USE_GT_BBOX False
+```
+
+## 🔗 Citation
 If you use our code or models in your research, please cite with:
 ```
 @article{xu2025learning,
@@ -109,3 +212,6 @@ If you use our code or models in your research, please cite with:
   publisher={Springer}
 }
 ```
+
+## <a name="acknowledgements"></a>💡 Acknowledgements
+This code is built on [HRNet](https://github.com/leoxiaobin/deep-high-resolution-net.pytorch).
