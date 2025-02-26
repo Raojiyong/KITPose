@@ -2,7 +2,7 @@
 
 [Tianyang Xu](https://xu-tianyang.github.io/), [Jiyong Rao](https://scholar.google.com/citations?user=bGxBmaQAAAAJ&hl=en&oi=ao), [Xiaoning Song](https://scholar.google.co.uk/citations?user=qIGhZCcAAAAJ&hl=en), [Zhenhua Feng](https://scholar.google.co.uk/citations?user=Y6KtijIAAAAJ&hl=en), and [Xiao-Jun Wu](https://scholar.google.co.uk/citations?user=5IST34sAAAAJ&hl=en), "Learning Structure-Supporting Dependencies via Keypoint Interactive Transformer for General Mammal Pose Estimation", IJCV, 2025
 
-[[paper](https://link.springer.com/article/10.1007/s11263-025-02355-0)] [[pretrained models](https://1drv.ms/f/c/516ca5af9c3a92b7/EqSxjqfURJRLnohjuJNnpuIBi8LAVUyJQ-cw7d39AbE4Mw?e=aMVTDo)]
+[[paper](https://link.springer.com/article/10.1007/s11263-025-02355-0)] [[arXiv](http://arxiv.org/abs/2502.18214)] [[pretrained models](https://1drv.ms/f/c/516ca5af9c3a92b7/EqSxjqfURJRLnohjuJNnpuIBi8LAVUyJQ-cw7d39AbE4Mw?e=aMVTDo)]
 
 #### 🔥🔥🔥 News
 
@@ -12,7 +12,7 @@
 ---
 
 > **Abstract:**
-This is an official pytorch implementation of [*Learning Structure-Supporting Dependencies via Keypoint Interactive Transformer for General Mammal Pose Estimatio*](https://link.springer.com/article/10.1007/s11263-025-02355-0). 
+This is an official pytorch implementation of [*Learning Structure-Supporting Dependencies via Keypoint Interactive Transformer for General Mammal Pose Estimation*](https://link.springer.com/article/10.1007/s11263-025-02355-0). 
 In this work, to achieve general mammal pose estimation, we developed a novel keypoints-interactive model, namely KITPose, to pursue structure-supporting dependencies among keypoints and body parts. In particular, we explicitly disentangle the keypoint-specific clues from the backbone features without any spatial splitting. An effective design named Generalised Heatmap Regression Loss is proposed to enable the adaptive adjustment of intermediate features to optimise keypoint representations.
 Simultaneously, to preserve the semantic information in the image, a new concept, referred to as body part prompts, is introduced to provide discriminative context, organising the information interactions. Furthermore, to automatically balance the importance between each keypoints, a novel adaptive weight strategy is introduced to common MSE loss. The designed architecture reflects its superiority and generalisation for general mammal pose estimation, which has been evaluated through extensive  experiments on the AP10K, AnimalKingdom, and COCO datasets.
 
@@ -34,7 +34,7 @@ We achieve state-of-the-art performance. Detailed results can be found in the pa
 - results in Table 3 (Left) & Table 4 (Right) of the main paper.
 
 <p align="center" style="display: flex; justify-content: center; gap: 50px;">
-  <img src="figures/res_animalpose.png" width="440">
+  <img src="figures/res_animalpose.png" width="420">
   <img src="figures/res_ak.png" width="400">
 </p>
 </details>
@@ -45,6 +45,24 @@ We achieve state-of-the-art performance. Detailed results can be found in the pa
 
 <p align="center">
   <img width="900" src="figures/res_coco_test.png">
+</p>
+</details>
+
+<details>
+<summary>Visual Comparison on AP-10K (click to expand)</summary>
+- results in Figure 8 of the main paper.
+
+<p align="center">
+  <img width="900" src="figures/fig8.png">
+</p>
+</details>
+
+<details>
+<summary>Qualitative Results on COCO test2017 (click to expand)</summary>
+- results in Figure 9 of the main paper.
+
+<p align="center">
+  <img width="900" src="figures/fig9.png">
 </p>
 </details>
 
