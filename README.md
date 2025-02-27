@@ -7,14 +7,16 @@
 #### 🔥🔥🔥 News
 
 - **2025-02-24:** Code and pre-trained models are released. 🎊🎊🎊
-- **2025-02-23:** This repo is released.
+- **2025-02-23:** This repo is released. 🚀📚
+- **2025-01-06:** A long version is accepted by IJCV 2025 (We extended KITPose in both method and experiment settings).
+- **2022-10-27:** KITPose is accepted to PRCV 2022, won the **Best Student Paper** award. 🎉🏆
 
 ---
 
 > **Abstract:**
-This is an official pytorch implementation of [*Learning Structure-Supporting Dependencies via Keypoint Interactive Transformer for General Mammal Pose Estimation*](https://link.springer.com/article/10.1007/s11263-025-02355-0). 
-In this work, to achieve general mammal pose estimation, we developed a novel keypoints-interactive model, namely KITPose, to pursue structure-supporting dependencies among keypoints and body parts. In particular, we explicitly disentangle the keypoint-specific clues from the backbone features without any spatial splitting. An effective design named Generalised Heatmap Regression Loss is proposed to enable the adaptive adjustment of intermediate features to optimise keypoint representations.
-Simultaneously, to preserve the semantic information in the image, a new concept, referred to as body part prompts, is introduced to provide discriminative context, organising the information interactions. Furthermore, to automatically balance the importance between each keypoints, a novel adaptive weight strategy is introduced to common MSE loss. The designed architecture reflects its superiority and generalisation for general mammal pose estimation, which has been evaluated through extensive  experiments on the AP10K, AnimalKingdom, and COCO datasets.
+> This is an official pytorch implementation of [*Learning Structure-Supporting Dependencies via Keypoint Interactive Transformer for General Mammal Pose Estimation*](https://link.springer.com/article/10.1007/s11263-025-02355-0).
+> In this work, to achieve general mammal pose estimation, we developed a novel keypoints-interactive model, namely KITPose, to pursue structure-supporting dependencies among keypoints and body parts. In particular, we explicitly disentangle the keypoint-specific clues from the backbone features without any spatial splitting. An effective design named Generalised Heatmap Regression Loss is proposed to enable the adaptive adjustment of intermediate features to optimise keypoint representations.
+> Simultaneously, to preserve the semantic information in the image, a new concept, referred to as body part prompts, is introduced to provide discriminative context, organising the information interactions. Furthermore, to automatically balance the importance between each keypoints, a novel adaptive weight strategy is introduced to common MSE loss. The designed architecture reflects its superiority and generalisation for general mammal pose estimation, which has been evaluated through extensive experiments on the AP10K, AnimalKingdom, and COCO datasets.
 
 ![Illustrating the architecture of the proposed KITPose](/figures/kitpose.png)
 ## <a name="results"></a>🔎 Main Results
@@ -137,7 +139,7 @@ It should be noted that we have made modifications to the [COCOAPI](https://gith
    ```
 ## 🖨️ Data preparation 
 
-For AP-10K data, please download the data from [AP10K](https://github.com/AlexTheBad/AP-10K) and put it in the data directory.
+**For AP-10K data**, please download the data from [AP10K](https://github.com/AlexTheBad/AP-10K) and put it in the data directory.
 ```
 ${POSE_ROOT}
 |── data
@@ -158,7 +160,62 @@ ${POSE_ROOT}
         │   │-- ...
 
 ```
-For AnimalKingdom data, please download the data from [AnimalKingdom](https://github.com/leoxiaobin/deep-high-resolution-net.pytorch) and put it in the data directory.
+**For AnimalPose data**, we organize the data according to the MMPose:
+
+1. Download the images of [PASCAL VOC2012](http://host.robots.ox.ac.uk/pascal/VOC/voc2012/#data), especially the five categories (dog, cat, sheep, cow, horse), which we use as trainval dataset.
+
+2. Download the [test-set](https://drive.google.com/drive/folders/1DwhQobZlGntOXxdm7vQsE4bqbFmN3b9y?usp=sharing) images with raw annotations (1000 images, 5 categories).
+
+3. We have pre-processed the annotations to make it compatible with MMPose. Please download the annotation files from [annotations](https://download.openmmlab.com/mmpose/datasets/animalpose_annotations.tar). If you would like to generate the annotations by yourself, please check our dataset parsing [codes](https://github.com/open-mmlab/mmpose/tree/dev-1.x/tools/dataset_converters/parse_animalpose_dataset.py).
+
+Extract them under {POSE_ROOT}/data, and make them look like this:
+```
+${POSE_ROOT}
+`── data
+    │── animalpose
+        │
+        │-- VOC2012
+        │   │-- Annotations
+        │   │-- ImageSets
+        │   │-- JPEGImages
+        │   │-- SegmentationClass
+        │   │-- SegmentationObject
+        │
+        │-- animalpose_image_part2
+        │   │-- cat
+        │   │-- cow
+        │   │-- dog
+        │   │-- horse
+        │   │-- sheep
+        │
+        │-- annotations
+        │   │-- animalpose_train.json
+        │   |-- animalpose_val.json
+        │   |-- animalpose_trainval.json
+        │   │-- animalpose_test.json
+        │
+        │-- PASCAL2011_animal_annotation
+        │   │-- cat
+        │   │   |-- 2007_000528_1.xml
+        │   │   |-- 2007_000549_1.xml
+        │   │   │-- ...
+        │   │-- cow
+        │   │-- dog
+        │   │-- horse
+        │   │-- sheep
+        │
+        │-- annimalpose_anno2
+        │   │-- cat
+        │   │   |-- ca1.xml
+        │   │   |-- ca2.xml
+        │   │   │-- ...
+        │   │-- cow
+        │   │-- dog
+        │   │-- horse
+        │   │-- sheep
+
+```
+**For AnimalKingdom data**, please download the data from [AnimalKingdom](https://github.com/leoxiaobin/deep-high-resolution-net.pytorch) and put it in the data directory.
 ```
 ${POSE_ROOT}
 |-- data
@@ -219,7 +276,7 @@ CUDA_VISIBLE_DEVICES=0 python tools/adaW_test_cutmix_part.py \
 ```
 
 ## 🔗 Citation
-If you use our code or models in your research, please cite with:
+If you find our work helpful for your research, please consider citing the following BibTex entry:
 ```
 @article{xu2025learning,
   title={Learning Structure-Supporting Dependencies via Keypoint Interactive Transformer for General Mammal Pose Estimation},
@@ -228,6 +285,15 @@ If you use our code or models in your research, please cite with:
   pages={1--19},
   year={2025},
   publisher={Springer}
+}
+
+@inproceedings{rao2022kitpose,
+  title={Kitpose: Keypoint-interactive transformer for animal pose estimation},
+  author={Rao, Jiyong and Xu, Tianyang and Song, Xiaoning and Feng, Zhen-Hua and Wu, Xiao-Jun},
+  booktitle={Chinese Conference on Pattern Recognition and Computer Vision (PRCV)},
+  pages={660--673},
+  year={2022},
+  organization={Springer}
 }
 ```
 

@@ -16,14 +16,4 @@ from __future__ import print_function
 import models.pose_resnet
 import models.pose_hrnet
 import models.hourglass
-import models.kitpose_b
-import models.kitpose_base
-import models.kitpose_s
-import models.kitpose_dense
-import models.kitpose_dw
-import models.kptr_b
-import models.kitpose_rel
 import models.kitpose_part
-import models.kitpose_part2
-import models.kitpose_part_moe
-import models.kitpose_part_moe_
