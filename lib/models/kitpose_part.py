@@ -19,6 +19,7 @@ from .pose_hrnet import PoseHighResolutionNet, Bottleneck, BasicBlock
 BN_MOMENTUM = 0.1
 logger = logging.getLogger(__name__)
 
+
 class FeedForward(nn.Module):
     def __init__(self, dim, hidden_dim, dropout=0.):
         super().__init__()
@@ -33,8 +34,9 @@ class FeedForward(nn.Module):
     def forward(self, x):
         return self.net(x)
 
+
 class Attention(nn.Module):
-    def __init__(self, dim, inner_dim, heads=8, dropout=0., num_keypoints=None, scale_with_head=False, aia_mode=False):
+    def __init__(self, dim, inner_dim, heads=8, dropout=0., num_keypoints=None, scale_with_head=False):
         super().__init__()
         self.heads = heads
         self.scale = (dim // heads) ** -0.5 if scale_with_head else dim ** -0.5
@@ -45,7 +47,6 @@ class Attention(nn.Module):
             nn.Dropout(dropout)
         )
         self.num_keypoints = num_keypoints
-        self.aia_mode = aia_mode
 
     # @get_local('attn')
     def forward(self, x, mask=None, pos_embed=None):
@@ -74,18 +75,18 @@ class Attention(nn.Module):
 
 class PoseEncoderLayer(nn.Module):
     def __init__(self, dim, inner_dim, heads, dropout, mlp_dim, in_channels=None, all_attn=False,
-                 scale_with_head=False, aia_mode=False):
+                 scale_with_head=False):
         super().__init__()
         self.attn = Attention(dim, inner_dim, heads=heads, dropout=dropout, num_keypoints=in_channels,
-                              scale_with_head=scale_with_head, aia_mode=aia_mode)
+                              scale_with_head=scale_with_head)
         self.ffn = FeedForward(dim, mlp_dim, dropout=dropout)
         self.norm1 = nn.LayerNorm(dim)
         self.norm2 = nn.LayerNorm(dim)
 
-    def forward(self, x, mask=None, pos=None, inner_pos=None):
+    def forward(self, x, mask=None, pos=None):
         residual = x
         x = self.norm1(x)
-        x = self.attn(x, mask, pos, inner_pos)
+        x = self.attn(x, mask, pos)
         x += residual
         residual = x
         x = self.norm2(x)
@@ -96,23 +97,22 @@ class PoseEncoderLayer(nn.Module):
 
 class Transformer(nn.Module):
     def __init__(self, dim, inner_dim, depth, heads, mlp_dim, dropout, num_keypoints=None, num_bp=None, all_attn=False,
-                 scale_with_head=False, aia_mode=False):
+                 scale_with_head=False):
         super().__init__()
         self.all_attn = all_attn
         self.num_keypoints = num_keypoints
         self.num_bp = num_bp
         self.layers = nn.ModuleList([
-            PoseEncoderLayer(dim, inner_dim, heads, dropout, mlp_dim, num_keypoints + num_bp, all_attn, scale_with_head,
-                             aia_mode)
+            PoseEncoderLayer(dim, inner_dim, heads, dropout, mlp_dim, num_keypoints + num_bp, all_attn, scale_with_head)
             for _ in range(depth)
         ])
 
-    def forward(self, x, mask=None, pos=None, inner_pos=None):
+    def forward(self, x, mask=None, pos=None):
         # normal cnnect
         for idx, layer in enumerate(self.layers):
             if idx > 0 and self.all_attn:
                 x[:, self.num_bp:] += pos
-            x, attn_weights = layer(x, mask=mask, pos=pos, inner_pos=inner_pos)
+            x = layer(x, mask=mask, pos=pos)
         return x
 
 
@@ -147,8 +147,7 @@ class PromptLearner(nn.Module):
 class KITPose_base(nn.Module):
     def __init__(self, *, feature_size, kpt_size, num_keypoints, num_bp, dim, inner_dim, depth, heads, mlp_dim,
                  apply_init=False, apply_multi=True, hidden_heatmap_dim=64 * 32, heatmap_dim=64 * 64,
-                 heatmap_size=[64, 64], channels=32, dropout=0., emb_dropout=0., pos_embedding_type="learnable",
-                 aia_mode=False):
+                 heatmap_size=[64, 64], channels=32, dropout=0., emb_dropout=0., pos_embedding_type="learnable"):
         super().__init__()
         assert isinstance(feature_size, list) and isinstance(kpt_size,
                                                              list), 'image_size and patch_size should be list'
@@ -166,7 +165,6 @@ class KITPose_base(nn.Module):
         self.num_patches = num_patches
         self.pos_embedding_type = pos_embedding_type
         self.all_attn = (self.pos_embedding_type == "sine-full")
-        self.aia_mode = aia_mode
 
         self.bp_embeddings = nn.Parameter(torch.zeros(1, self.num_bp, dim))
         h, w = feature_size[0] // (self.patch_size[0]), feature_size[1] // (self.patch_size[1])
@@ -178,7 +176,7 @@ class KITPose_base(nn.Module):
 
         # transformer
         self.transformer = Transformer(dim, inner_dim, depth, heads, mlp_dim, dropout, num_keypoints=num_keypoints,
-                                       num_bp=num_bp, all_attn=self.all_attn, scale_with_head=False, aia_mode=aia_mode)
+                                       num_bp=num_bp, all_attn=self.all_attn, scale_with_head=False)
 
         self.to_keypoint_token = nn.Identity()
 
@@ -340,7 +338,6 @@ class KITPose(nn.Module):
             heatmap_dim=cfg.MODEL.HEATMAP_SIZE[1] * cfg.MODEL.HEATMAP_SIZE[0],
             heatmap_size=[cfg.MODEL.HEATMAP_SIZE[1], cfg.MODEL.HEATMAP_SIZE[0]],
             pos_embedding_type=cfg.MODEL.POS_EMBEDDING_TYPE,
-            aia_mode=cfg.MODEL.AIA_MODE
         )
 
     def forward(self, x):

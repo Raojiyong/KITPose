@@ -43,7 +43,6 @@ _C.MODEL.NUM_BP = 4
 _C.MODEL.TAG_PER_JOINT = True
 _C.MODEL.TARGET_TYPE = 'gaussian'
 _C.MODEL.ATTN_TYPE = 1
-_C.MODEL.AIA_MODE = False
 _C.MODEL.IMAGE_SIZE = [256, 256]  # width * height, ex: 192 * 256
 _C.MODEL.HEATMAP_SIZE = [64, 64]  # width * height, ex: 24 * 32
 _C.MODEL.PATCH_SIZE = [3, 3]
