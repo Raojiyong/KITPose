@@ -214,7 +214,7 @@ def main():
 
         # train for one epoch
         wandb_train_log = train_cutmix(cfg, train_loader, model, criterion_kpt, criterion_part, optimizer, epoch,
-                                       final_output_dir, wandb)
+                                       final_output_dir)
 
         # evaluate on validation set
         perf_indicator, wandb_val_log = validate(
