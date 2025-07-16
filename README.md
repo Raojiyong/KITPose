@@ -215,7 +215,7 @@ ${POSE_ROOT}
         │   │-- sheep
 
 ```
-**For AnimalKingdom data**, please download the data from [AnimalKingdom](https://github.com/leoxiaobin/deep-high-resolution-net.pytorch) and put it in the data directory.
+**For AnimalKingdom data**, please download the data from [AnimalKingdom](https://github.com/sutdcv/Animal-Kingdom?tab=readme-ov-file) and put it in the data directory.
 ```
 ${POSE_ROOT}
 |-- data
