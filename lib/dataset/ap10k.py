@@ -124,7 +124,7 @@ class AP10KDataset(JointsDataset):
         return os.path.join(
             self.root,
             'annotations',
-            prefix + '_' + self.image_set + '_split1.json'
+            prefix + '-' + self.image_set + '-split1.json'
         )
 
     def _load_image_set_index(self):
